@@ -69,9 +69,12 @@ scene.add(player2Mesh);
 // Model 3d de la balle (oui c'est un pot de charbon)
 
 const gltfLoader = new GLTFLoader();
+let potOfCoal;
+
 gltfLoader.load("../model/glTF/PotOfCoals.gltf", (gltf) => {
-  gltf.scene.scale.set(10, 10, 10);
-  scene.add(gltf.scene);
+  potOfCoal = gltf.scene;
+  potOfCoal.scale.set(10, 10, 10);
+  scene.add(potOfCoal);
 });
 
 // Le background environnemental
@@ -131,7 +134,7 @@ const viewportSize = {
 };
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  90,
   viewportSize.width / viewportSize.height
 );
 scene.add(camera);
@@ -146,18 +149,18 @@ renderer.setSize(viewportSize.width, viewportSize.height);
 
 // caméra fixe
 
-camera.position.z = 3;
-renderer.render(scene, camera);
+// camera.position.z = 3;
+// renderer.render(scene, camera);
 
 // Caméra débug
 
-// const controls = new OrbitControls(camera, canvas);
-// controls.enableDamping = true;
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
 
-// camera.position.x = 1;
-// camera.position.y = 1;
-// camera.position.z = 3;
-// camera.lookAt(player1Mesh.position);
+camera.position.x = 1;
+camera.position.y = 1;
+camera.position.z = 3;
+camera.lookAt(player1Mesh.position);
 
 // resize camera
 window.addEventListener("resize", () => {
@@ -167,6 +170,10 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
   renderer.setSize(viewportSize.width, viewportSize.height);
 });
+
+// score joueur
+let score1 = 0;
+let score2 = 0;
 
 // mouvement joueur
 let moveUp1 = false;
@@ -208,7 +215,11 @@ window.addEventListener("keyup", (event) => {
     moveDown2 = false;
   }
 });
-// animation de mouvement
+
+// mouvement de la balle (ou du pot de charbon)
+let ballDirection = new THREE.Vector2(1, 0.5).normalize();
+let ballSpeed = 0.05;
+
 const clock = new THREE.Clock();
 const tick = () => {
   if (moveUp1) {
@@ -239,11 +250,76 @@ const tick = () => {
 
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
+
+  const updateScoreDisplay = () => {
+    console.log(`Score - Joueur 1: ${score1} | Joueur 2: ${score2}`);
+  };
+
+  if (potOfCoal) {
+    potOfCoal.position.x += ballDirection.x * ballSpeed;
+    potOfCoal.position.y += ballDirection.y * ballSpeed;
+    potOfCoal.rotation.y += 0.1;
+
+    if (potOfCoal.position.y > boundary || potOfCoal.position.y < -boundary) {
+      ballDirection.y *= -1;
+    }
+
+    if (
+      potOfCoal.position.x - 0.1 < player1Mesh.position.x + 0.05 &&
+      potOfCoal.position.y > player1Mesh.position.y - 0.7 &&
+      potOfCoal.position.y < player1Mesh.position.y + 0.75
+    ) {
+      ballDirection.x = Math.abs(ballDirection.x);
+      ballDirection.y += (potOfCoal.position.y - player1Mesh.position.y) * 0.1;
+      ballSpeed += 0.01; // augmentation de la balle a chaque rebond
+    }
+
+    if (
+      potOfCoal.position.x + 0.1 > player2Mesh.position.x - 0.05 &&
+      potOfCoal.position.y > player2Mesh.position.y - 0.75 &&
+      potOfCoal.position.y < player2Mesh.position.y + 0.75
+    ) {
+      ballDirection.x = -Math.abs(ballDirection.x);
+      ballDirection.y += (potOfCoal.position.y - player2Mesh.position.y) * 0.1;
+      ballSpeed += 0.01;
+    }
+
+    if (potOfCoal.position.x < -5) {
+      score2++;
+      updateScoreDisplay();
+      ballSpeed = 0.05;
+      potOfCoal.position.set(0, 0, 0);
+      ballDirection.set(1, Math.random() * 2 - 1).normalize();
+    }
+
+    if (potOfCoal.position.x > 5) {
+      score1++;
+      updateScoreDisplay();
+      ballSpeed = 0.05;
+      potOfCoal.position.set(0, 0, 0);
+      ballDirection.set(-1, Math.random() * 2 - 1).normalize();
+    }
+  }
 };
+
 tick();
 
 //Lumières
-const hemisphereLight = new THREE.HemisphereLight(0x0000ff, 0xffffff, 0.9);
+const hemisphereLight = new THREE.HemisphereLight("white", "white", 0.9);
 scene.add(hemisphereLight);
-const helper = new THREE.HemisphereLightHelper(directionalLight, 5);
+const helper = new THREE.HemisphereLightHelper(hemisphereLight, 5);
 scene.add(helper);
+// ombres TO DO
+renderer.shadowMap.enabled = true;
+player1Mesh.castShadow = true;
+player2Mesh.castShadow = true;
+potOfCoal.castShadow = true;
+
+backgroundMesh.receiveShadow = true;
+wallUpMesh.receiveShadow = true;
+wallDownMesh.receiveShadow = true;
+wallRightMesh.receiveShadow = true;
+wallLeftMesh.receiveShadow = true;
+
+object.receiveShadow = true;
+light.castShadow = true;
