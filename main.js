@@ -69,9 +69,12 @@ scene.add(player2Mesh);
 // Model 3d de la balle (oui c'est un pot de charbon)
 
 const gltfLoader = new GLTFLoader();
+let potOfCoal;
+
 gltfLoader.load("../model/glTF/PotOfCoals.gltf", (gltf) => {
-  gltf.scene.scale.set(10, 10, 10);
-  scene.add(gltf.scene);
+  potOfCoal = gltf.scene;
+  potOfCoal.scale.set(10, 10, 10);
+  scene.add(potOfCoal);
 });
 
 // Le background environnemental
@@ -131,7 +134,7 @@ const viewportSize = {
 };
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  90,
   viewportSize.width / viewportSize.height
 );
 scene.add(camera);
@@ -167,6 +170,12 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
   renderer.setSize(viewportSize.width, viewportSize.height);
 });
+
+// score joueur
+let score1 = 0;
+let score2 = 0;
+
+console.log(score1, score2);
 
 // mouvement joueur
 let moveUp1 = false;
@@ -208,7 +217,11 @@ window.addEventListener("keyup", (event) => {
     moveDown2 = false;
   }
 });
-// animation de mouvement
+
+// mouvement de la balle (ou du pot de charbon)
+let ballDirection = new THREE.Vector2(1, 0.5).normalize();
+let ballSpeed = 0.05;
+
 const clock = new THREE.Clock();
 const tick = () => {
   if (moveUp1) {
@@ -239,7 +252,46 @@ const tick = () => {
 
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
+  if (potOfCoal) {
+    potOfCoal.position.x += ballDirection.x * ballSpeed;
+    potOfCoal.position.y += ballDirection.y * ballSpeed;
+    potOfCoal.rotation.y += 0.1;
+    potOfCoal.rotation.x += 0.1;
+    if (potOfCoal.position.y > boundary || potOfCoal.position.y < -boundary) {
+      ballDirection.y *= -1;
+    }
+
+    if (
+      potOfCoal.position.x - 0.1 < player1Mesh.position.x + 0.05 &&
+      potOfCoal.position.y > player1Mesh.position.y - 0.7 &&
+      potOfCoal.position.y < player1Mesh.position.y + 0.75
+    ) {
+      ballDirection.x = Math.abs(ballDirection.x);
+      ballDirection.y += (potOfCoal.position.y - player1Mesh.position.y) * 0.1;
+    }
+
+    if (
+      potOfCoal.position.x + 0.1 > player2Mesh.position.x - 0.05 &&
+      potOfCoal.position.y > player2Mesh.position.y - 0.75 &&
+      potOfCoal.position.y < player2Mesh.position.y + 0.75
+    ) {
+      ballDirection.x = -Math.abs(ballDirection.x);
+      ballDirection.y += (potOfCoal.position.y - player2Mesh.position.y) * 0.1;
+    }
+
+    if (potOfCoal.position.x < -5) {
+      potOfCoal.position.set(0, 0, 0);
+
+      ballDirection.set(1, Math.random() * 2 - 1).normalize();
+      if (potOfCoal.position.x > 5)
+        ballDirection.x = -Math.abs(ballDirection.x);
+    } else if (potOfCoal.position.x > 5) potOfCoal.position.set(0, 0, 0);
+
+    ballDirection.set(1, Math.random() * 2 - 1).normalize();
+    if (potOfCoal.position.x > 5) ballDirection.x = -Math.abs(ballDirection.x);
+  }
 };
+
 tick();
 
 //Lumières
