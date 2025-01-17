@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-// a supprimer lorsque l'on aura terminé
+// Caméra débug
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 const scene = new THREE.Scene();
 
@@ -142,8 +142,14 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(viewportSize.width, viewportSize.height);
 
+// débug caméra (Il y a la caméra fixe et la caméra orbite pour regarder l'environnement, juste décommenter les blocs)
+
+// caméra fixe
+
 camera.position.z = 3;
 renderer.render(scene, camera);
+
+// Caméra débug
 
 // const controls = new OrbitControls(camera, canvas);
 // controls.enableDamping = true;
