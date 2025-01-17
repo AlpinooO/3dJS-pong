@@ -1,5 +1,7 @@
 import * as THREE from "three";
-
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+// a supprimer lorsque l'on aura terminé
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 const scene = new THREE.Scene();
 
 // textures
@@ -64,14 +66,64 @@ player2Mesh.position.z = 0;
 
 scene.add(player2Mesh);
 
-const backgroundGeometry = new THREE.PlaneGeometry(15, 15);
+// Model 3d de la balle (oui c'est un pot de charbon)
 
+const gltfLoader = new GLTFLoader();
+gltfLoader.load("../model/glTF/PotOfCoals.gltf", (gltf) => {
+  gltf.scene.scale.set(10, 10, 10);
+  scene.add(gltf.scene);
+});
+
+// Le background environnemental
+const backgroundGeometry = new THREE.PlaneGeometry(15, 15);
 const backgroundMesh = new THREE.Mesh(backgroundGeometry, Material);
-backgroundMesh.position.x = -1;
+backgroundMesh.position.x = 0;
 backgroundMesh.position.y = 0;
 backgroundMesh.position.z = -1;
 
 scene.add(backgroundMesh, Material);
+
+// le mur du haut et du bas
+const wallUpGeometry = new THREE.PlaneGeometry(15, 15);
+const wallUpMesh = new THREE.Mesh(wallUpGeometry, Material);
+wallUpMesh.position.x = 0;
+wallUpMesh.position.y = 3;
+wallUpMesh.position.z = -1;
+
+wallUpMesh.rotation.x = Math.PI / 2;
+
+scene.add(wallUpMesh, Material);
+
+const wallDownGeometry = new THREE.PlaneGeometry(15, 15);
+const wallDownMesh = new THREE.Mesh(wallDownGeometry, Material);
+wallDownMesh.position.x = 0;
+wallDownMesh.position.y = -3;
+wallDownMesh.position.z = -1;
+
+wallDownMesh.rotation.x = Math.PI / -2;
+
+scene.add(wallDownMesh, Material);
+
+// mur gauche et droite
+
+const wallRightGeometry = new THREE.PlaneGeometry(15, 15);
+const wallRightMesh = new THREE.Mesh(wallRightGeometry, Material);
+wallRightMesh.position.x = 4.5;
+wallRightMesh.position.y = 3;
+wallRightMesh.position.z = -1;
+
+wallRightMesh.rotation.y = Math.PI / -2;
+scene.add(wallRightMesh, Material);
+
+const wallLeftGeometry = new THREE.PlaneGeometry(15, 15);
+const wallLeftMesh = new THREE.Mesh(wallLeftGeometry, Material);
+wallLeftMesh.position.x = -4.5;
+wallLeftMesh.position.y = 3;
+wallLeftMesh.position.z = -1;
+
+wallLeftMesh.rotation.y = Math.PI / 2;
+scene.add(wallLeftMesh, Material);
+
 // plein écran
 const viewportSize = {
   width: window.innerWidth,
@@ -92,6 +144,14 @@ renderer.setSize(viewportSize.width, viewportSize.height);
 
 camera.position.z = 3;
 renderer.render(scene, camera);
+
+// const controls = new OrbitControls(camera, canvas);
+// controls.enableDamping = true;
+
+// camera.position.x = 1;
+// camera.position.y = 1;
+// camera.position.z = 3;
+// camera.lookAt(player1Mesh.position);
 
 // resize camera
 window.addEventListener("resize", () => {
