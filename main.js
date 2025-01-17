@@ -1,7 +1,51 @@
 import * as THREE from "three";
-import { MapControls } from "three/addons/controls/MapControls.js";
+
 const scene = new THREE.Scene();
 
+// textures
+const textureLoader = new THREE.TextureLoader();
+
+const roughnessTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_roughness.png"
+);
+const normalTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_normal.png"
+);
+const heightTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_height.png"
+);
+const emissiveTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_metallic.png"
+);
+const baseColorTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_basecolor.png"
+);
+const ambientOcclusionTexture = textureLoader.load(
+  "/textures/Metal_Pattern_008_ambientOcclusion.png"
+);
+
+const texturesToLoad = {
+  roughnessMap: roughnessTexture,
+  normalMap: normalTexture,
+  displacementMap: heightTexture,
+  emissiveMap: emissiveTexture,
+  map: baseColorTexture,
+  aoMap: ambientOcclusionTexture,
+};
+const textures = Object.fromEntries(
+  Object.entries(texturesToLoad).map(([textureKey, texture]) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set = (2, 2);
+
+    return [textureKey, texture];
+  })
+);
+
+const Material = new THREE.MeshStandardMaterial({
+  ...textures,
+  displacementScale: 0.1,
+});
 // les 2 joueurs
 const player1Geometry = new THREE.BoxGeometry(0.1, 1.5, 0.5);
 const player1Material = new THREE.MeshBasicMaterial({ color: "white" });
@@ -20,6 +64,14 @@ player2Mesh.position.z = 0;
 
 scene.add(player2Mesh);
 
+const backgroundGeometry = new THREE.PlaneGeometry(15, 15);
+
+const backgroundMesh = new THREE.Mesh(backgroundGeometry, Material);
+backgroundMesh.position.x = -1;
+backgroundMesh.position.y = 0;
+backgroundMesh.position.z = -1;
+
+scene.add(backgroundMesh, Material);
 // plein écran
 const viewportSize = {
   width: window.innerWidth,
@@ -50,6 +102,7 @@ window.addEventListener("resize", () => {
   renderer.setSize(viewportSize.width, viewportSize.height);
 });
 
+// mouvement joueur
 let moveUp1 = false;
 let moveDown1 = false;
 
@@ -122,3 +175,9 @@ const tick = () => {
   requestAnimationFrame(tick);
 };
 tick();
+
+//Lumières
+const hemisphereLight = new THREE.HemisphereLight(0x0000ff, 0xffffff, 0.9);
+scene.add(hemisphereLight);
+const helper = new THREE.HemisphereLightHelper(directionalLight, 5);
+scene.add(helper);
